@@ -8,60 +8,86 @@ const { ethers } = require("hardhat");
 
 describe("N2DRewards", function () {
   let ownerAddress;
-  let n2DRewards;
+  let godRewards;
   let master;
-  let n2drPerBlock;
+  let godsPerBlock;
   let startBlock;
   let multiplier;
-  let n2DRewardsAddress
+  let godsRewardsAddress;
   let otherAccountAddress;
 
   this.beforeEach(async () => {
     const [owner, otherAccount] = await ethers.getSigners();
-    otherAccountAddress = otherAccount.address
-    n2DRewards = await ethers.deployContract("N2DRewards");
-    await n2DRewards.waitForDeployment();
+    otherAccountAddress = otherAccount.address;
+    godRewards = await ethers.deployContract("GodRewards");
+    await godRewards.waitForDeployment();
     ownerAddress = owner.address;
-    n2DRewardsAddress = await n2DRewards.getAddress()
+    godsRewardsAddress = await godRewards.getAddress();
     dev = ethers.ZeroAddress;
-    n2drPerBlock = 1; // Adjust as needed
+    godsPerBlock = 1; // Adjust as needed
     startBlock = 1; // Adjust as needed
     multiplier = 2; // Adjust as needed
 
     master = await ethers.deployContract("N2DMasterChefV1", [
-      n2DRewardsAddress,
+      godsRewardsAddress,
       ownerAddress,
-      n2drPerBlock,
+      godsPerBlock,
       startBlock,
       multiplier,
     ]);
-  });
 
-  it("mint Token", async () => {
+    await master.waitForDeployment();
+
     const mintAmount = ethers.parseEther("77777");
-    await n2DRewards.mint(ownerAddress, mintAmount);
+    const transferValue = ethers.parseEther("200");
+    await godRewards.mint(ownerAddress, mintAmount);
 
-    const ownerBalance = await n2DRewards.balanceOf(ownerAddress);
+    const ownerBalance = await godRewards.balanceOf(ownerAddress);
 
     expect(ownerBalance).to.be.equal(ethers.parseEther("77777"));
+
+    const approval = await godRewards.approve(ownerAddress, ethers.MaxUint256)
+    await approval.wait()
+
+    const transaction = await godRewards.transferFrom(ownerAddress, otherAccount, transferValue)
+    await transaction.wait()
   });
+ 
 
   it("check GrantRol", async () => {
-    const result = await n2DRewards.grantRole();
+    const result = await godRewards.grantRole();
   });
 
   it("check ContractAssress", async () => {
     const masterAddress = await master.address;
-    expect(masterAddress).to.be.equal( await master.address)
+    expect(masterAddress).to.be.equal(await master.address);
   });
 
   it("check poolInfo", async () => {
-    
     const totalAllocation = await master.totalAllocation();
-    expect(totalAllocation).to.be.equal('10000')
+    expect(totalAllocation).to.be.equal("10000");
+  });
+
+  it("Gods Rewards Name", async () => {
+    const Name = "Gods Rewards";
+    const n2dName = await godRewards.name();
+    expect(n2dName).to.be.equal(Name);
+  });
+
+  it("GOD Symbol", async () => {
+    const Symbol = "GOD";
+    const symbol = await godRewards.symbol();
+    expect(symbol).to.be.equal(Symbol);
   });
 
 
+  it("check other balance", async () => {
+    const transferValue = ethers.parseEther("200");
+    // await n2DRewards.connect(owner).mint(otherAccountAddress, mintAmount);
+    const otherBalance = await godRewards.balanceOf(otherAccountAddress);
+    expect(transferValue).to.be.equal(otherBalance);
+    // expect(ownerBalance).to.be.equal(mintAmount);
+  });
 });
 
 // describe("Deployment", function () {

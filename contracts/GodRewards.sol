@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT LICENSE
+// SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.20;
 
@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract N2DRewards is ERC20, Ownable, AccessControl {
+contract GodRewards is ERC20, Ownable, AccessControl {
     using Math for uint256;
     using SignedMath for int256;
     using SafeERC20 for ERC20;
@@ -20,7 +20,7 @@ contract N2DRewards is ERC20, Ownable, AccessControl {
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
- constructor() ERC20("N2D Rewards", "N2DR") Ownable(msg.sender) {
+ constructor() ERC20("Gods Rewards", "GOD") Ownable(msg.sender) {
     // 생성자 내용 추가 (필요한 경우)
 }
 
