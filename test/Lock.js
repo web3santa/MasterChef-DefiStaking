@@ -6,9 +6,10 @@ const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("N2DRewards", function () {
+describe("GodToken", function () {
   let ownerAddress;
   let godRewards;
+  let godRewards2;
   let master;
   let godsPerBlock;
   let startBlock;
@@ -21,12 +22,14 @@ describe("N2DRewards", function () {
     otherAccountAddress = otherAccount.address;
     godRewards = await ethers.deployContract("GodRewards");
     await godRewards.waitForDeployment();
+    godRewards2 = await ethers.deployContract("GodRewards");
+    await godRewards2.waitForDeployment();
     ownerAddress = owner.address;
     godsRewardsAddress = await godRewards.getAddress();
     dev = ethers.ZeroAddress;
     godsPerBlock = 1; // Adjust as needed
     startBlock = 1; // Adjust as needed
-    multiplier = 2; // Adjust as needed
+    multiplier = 1; // Adjust as needed
 
     master = await ethers.deployContract("N2DMasterChefV1", [
       godsRewardsAddress,
@@ -51,6 +54,11 @@ describe("N2DRewards", function () {
 
     const transaction = await godRewards.transferFrom(ownerAddress, otherAccount, transferValue)
     await transaction.wait()
+
+    const amount = ethers.parseEther('150')
+
+    const staking = await master.stake(1, amount, otherAccount);
+    await staking.wait()
   });
  
 
@@ -88,6 +96,54 @@ describe("N2DRewards", function () {
     expect(transferValue).to.be.equal(otherBalance);
     // expect(ownerBalance).to.be.equal(mintAmount);
   });
+
+  it("check other balance", async () => {
+    const poolLength = await master.poolLength();
+
+    expect(poolLength).to.be.equal(1)
+  });
+
+  it("staking other account", async() => {
+    const amount = ethers.parseEther('150')
+    const [owner, otherAccount] = await ethers.getSigners();
+    const [amounts, bust] = await master.userInfo(1, otherAccount)
+    expect(amounts).to.be.equal(amount)
+  })
+
+  it("get Pool info", async() => {
+    const [lpToken, allocPoint, lastRewardBlock, rewardTokenPerShare] = await master.getPoolInfo(0)
+
+    // console.log(lpToken);
+    // console.log(allocPoint);
+
+  })
+
+  it("update Miltiplier", async() => {
+    const beforeMulti = await master.BONUS_MULTIPLIER();
+    const updateMulti = await master.updateMultiplier(2);
+    const afterMulti = await master.BONUS_MULTIPLIER();
+    expect(afterMulti).to.be.equal(2)
+
+  })
+
+  it("add Token in pool", async() => {
+    const updateMulti = await master.updateMultiplier(2);
+    const afterMulti = await master.BONUS_MULTIPLIER();
+    const [owner, otherAccount] = await ethers.getSigners();
+
+    const checkBalance = await master.getMultiplier(11, 12);
+    expect(checkBalance).to.be.equal(2)
+  })
+
+  it('check udeplicate pool', async() => {
+    const god2Address = await godRewards2.getAddress()
+    const checkUpdate = await master.add(3000, god2Address);
+    const [checkPoolInfo, lp, block, shar] = await master.poolInfo(1);
+    console.log(lp);
+    expect(lp).to.be.equal(3000)
+  })
+
+
 });
 
 // describe("Deployment", function () {
